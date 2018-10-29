@@ -10,6 +10,10 @@ Base.firstindex(seq::BioSequence) = 1
 Base.lastindex(seq::BioSequence) = length(seq)
 Base.eachindex(seq::BioSequence) = 1:lastindex(seq)
 
+function eachbitindex(seq::BioSequence, from = firstindex(seq), to = lastindex(seq))
+    return bitindex(seq, from):bits_per_symbol(seq):bitindex(seq, to)
+end
+
 # Bounds checking
 # ---------------
 

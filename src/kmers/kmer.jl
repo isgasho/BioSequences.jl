@@ -24,7 +24,7 @@ kmersize(::Type{Skipmer{T, M, N, K}}) where {T, M, N, K} = K
 kmersize(::Type{BigSkipmer{T, M, N, K}}) where {T, M, N, K} = K
 kmersize(skipmer::T) where {T <: Union{Skipmer, BigSkipmer}} = kmersize(typeof(skipmer))
 
-_span(M, N, K) = N * (K / M - 1) + M
+_span(M, N, K) = UInt(N * (K / M - 1) + M)
 @inline function span(::Type{T}) where {T <: Union{Skipmer, BigSkipmer}}
     return _span(bases_per_cycle(T), cycle_len(T), kmersize(T))
 end
