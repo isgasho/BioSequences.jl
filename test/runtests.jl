@@ -146,6 +146,7 @@ function random_interval(minstart, maxstop)
 end
 
 include("symbols.jl")
+include("alphabets.jl")
 
 @testset "Sequences" begin
     a = dna"A-CG-G"; b = rna"A-CG-G"; c = aa"AK-MV-";

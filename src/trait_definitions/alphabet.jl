@@ -30,10 +30,14 @@ for itself.
 It is also expected to implement the `BitsPerSymbol` method.
 """
 abstract type Alphabet end
-Base.eltype(::A) where A <: Alphabet = eltype(A)
-Base.firstindex(x::Alphabet) = 1
-Base.lastindex(x::Alphabet) = length(x)
-symbols(x::Alphabet) = tuple(collect(x)...)
+
+@inline Base.IteratorSize(::Type{A}) where {A <: Alphabet} = Base.HasLength()
+@inline Base.IteratorEltype(::Type{A}) where {A <: Alphabet} = Base.HasEltype()
+@inline Base.eltype(::A) where {A <: Alphabet} = eltype(A)
+@inline Base.firstindex(x::Alphabet) = 1
+@inline Base.lastindex(x::Alphabet) = length(x)
+@inline Base.eachindex(x::Alphabet) = firstindex(x):lastindex(x)
+@inline symbols(x::Alphabet) = tuple(collect(x)...)
 
 
 """
@@ -66,11 +70,11 @@ end
 Base.length(x::A) where {A <: NucleicAcidAlphabet{2}} = 4
 Base.length(x::A) where {A <: NucleicAcidAlphabet{4}} = 16
 
-@inline function Base.getindex(x::NucleicAcidAlphabet{2}, i::Int)
+@inline function Base.getindex(x::NucleicAcidAlphabet{2}, i::Integer)
     return reinterpret(eltype(x), 0x01 << (i - 1))
 end
-@inline function Base.getindex(x::NucleicAcidAlphabet{4}, i::Int)
-    return reinterpret(eltype(x), i - 1)
+@inline function Base.getindex(x::NucleicAcidAlphabet{4}, i::Integer)
+    return reinterpret(eltype(x), UInt8(i) - 0x01)
 end
 
 
@@ -117,8 +121,8 @@ Base.length(x::AminoAcidAlphabet) = 28
     state > 0x1b ? nothing : (reinterpret(AminoAcid, state), state + 0x01)
 end
 
-@inline function Base.getindex(x::AminoAcidAlphabet, i)
-    return reinterpret(AminoAcid, i - 1)
+@inline function Base.getindex(x::AminoAcidAlphabet, i::Integer)
+    return reinterpret(AminoAcid, UInt8(i) - 0x01)
 end
 
 
@@ -137,8 +141,8 @@ Base.length(::CharAlphabet) = 1114112
     state > '\U10ffff' ? nothing : (state, state + UInt32(1))
 end
 
-@inline function Base.getindex(::CharAlphabet, i)
-    return reinterpret(Char, i - 1)
+@inline function Base.getindex(::CharAlphabet, i::Integer)
+    return Char(UInt32(i) - UInt32(1))
 end
 
 
