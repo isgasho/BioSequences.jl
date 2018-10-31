@@ -150,8 +150,23 @@ include("alphabets.jl")
 
 @test gap(Char) == '-'
 
-@testset "Sequences" begin
+@testset "BioSequences" begin
+    @test BioSequence() == DNASequence()
+    @test BioSequences.encoded_data_eltype(DNASequence()) == UInt64
+    @test Alphabet(DNASequence()) == DNAAlphabet{4}()
+    @test BioSequences.BitsPerSymbol(DNASequence()) == BitsPerSymbol{4}()
+    @test BioSequences.BitsPerSymbol(RNASequence()) == BitsPerSymbol{4}()
+    @test BioSequences.bits_per_symbol(DNASequence()) == 4
+    @test BioSequences.bits_per_symbol(RNASequence()) == 4
     a = dna"A-CG-G"; b = rna"A-CG-G"; c = aa"AK-MV-";
+    @test BioSequences.symbols_per_data_element(a) == 16
+    @test firstbitindex(a) == bitindex(a, 1)
+    @test lastbitindex(a) == bitindex(a, lastindex(a))
+    @test BioSequences.bindata_mask(a) == 0x000000000000000f
+    @test eltype(a) == DNA
+    @test eltype(b) == RNA
+    @test size(a) == (length(a),)
+    @test size(b) == (length(b),)
     @test ungap(a) == dna"ACGG"
     @test ungap(b) == rna"ACGG"
     @test ungap(c) == aa"AKMV"
@@ -160,7 +175,7 @@ include("alphabets.jl")
     @test ungap!(c) === c && c == aa"AKMV"
 end
 
-@testset "BioSequences" begin
+@testset "GeneralSequences" begin
     include("mutablesequences/conversion.jl")
     include("mutablesequences/basics.jl")
     include("mutablesequences/hashing.jl")
@@ -188,7 +203,7 @@ end
 
 include("composition.jl")
 
-@testset "Kmers" begin
+@testset "Skipmers" begin
     include("kmers/conversion.jl")
     include("kmers/comparisons.jl")
     include("kmers/length.jl")
