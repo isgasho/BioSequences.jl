@@ -7,7 +7,6 @@ struct EachSkipmerIterator{SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence}
     rkmer::Vector{UT}
 end
 
-
 @inline Base.IteratorSize(::Type{T}) where T <: EachSkipmerIterator = Base.HasLength()
 @inline Base.IteratorEltype(::Type{T}) where T <: EachSkipmerIterator = Base.HasEltype()
 @inline Base.eltype(::Type{EachSkipmerIterator{SK, UT, SQ}}) where {SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence} = SK
