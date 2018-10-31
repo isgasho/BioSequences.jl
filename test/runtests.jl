@@ -154,8 +154,8 @@ include("alphabets.jl")
     @test BioSequence() == DNASequence()
     @test BioSequences.encoded_data_eltype(DNASequence()) == UInt64
     @test Alphabet(DNASequence()) == DNAAlphabet{4}()
-    @test BioSequences.BitsPerSymbol(DNASequence()) == BitsPerSymbol{4}()
-    @test BioSequences.BitsPerSymbol(RNASequence()) == BitsPerSymbol{4}()
+    @test BioSequences.BitsPerSymbol(DNASequence()) == BioSequences.BitsPerSymbol{4}()
+    @test BioSequences.BitsPerSymbol(RNASequence()) == BioSequences.BitsPerSymbol{4}()
     @test BioSequences.bits_per_symbol(DNASequence()) == 4
     @test BioSequences.bits_per_symbol(RNASequence()) == 4
     a = dna"A-CG-G"; b = rna"A-CG-G"; c = aa"AK-MV-";
