@@ -41,6 +41,8 @@
             
             @test eltype(DNAAlphabet{2}) == DNA
             @test eltype(DNAAlphabet{4}) == DNA
+            @test eltype(DNAAlphabet{2}()) == DNA
+            @test eltype(DNAAlphabet{4}()) == DNA
             
             test_alphabet_indexing(DNAAlphabet{2}, dna2sym)
             test_alphabet_indexing(DNAAlphabet{4}, dna4sym)
@@ -65,6 +67,8 @@
             
             @test eltype(RNAAlphabet{2}) == RNA
             @test eltype(RNAAlphabet{4}) == RNA
+            @test eltype(RNAAlphabet{2}()) == RNA
+            @test eltype(RNAAlphabet{4}()) == RNA
             
             test_alphabet_indexing(RNAAlphabet{2}, rna2sym)
             test_alphabet_indexing(RNAAlphabet{4}, rna4sym)
@@ -84,6 +88,7 @@
             test_generic_alphabet_indexing(AminoAcidAlphabet)
             test_alphabet_lastindex(AminoAcidAlphabet, 28)
             @test eltype(AminoAcidAlphabet) == AminoAcid
+            @test eltype(AminoAcidAlphabet()) == AminoAcid
             test_alphabet_indexing(AminoAcidAlphabet, aasym)
             test_alphabet_iteration(AminoAcidAlphabet, aasym)
         end
@@ -92,8 +97,15 @@
             test_generic_alphabet_indexing(CharAlphabet)
             test_alphabet_lastindex(CharAlphabet, 1114112)
             @test eltype(CharAlphabet) == Char
+            @test eltype(CharAlphabet()) == Char
             test_alphabet_indexing(CharAlphabet, charsym)
             test_alphabet_iteration(CharAlphabet, charsym)
+        end
+        @testset "Void" begin
+            VoidAlphabet = BioSequences.VoidAlphabet
+            @test eltype(VoidAlphabet) == Nothing
+            @test eltype(VoidAlphabet()) == Nothing
+            @test symbols(VoidAlphabet()) == nothing
         end
     end
     
@@ -185,6 +197,12 @@
             end
             @test_throws BioSequences.EncodeError encode(AminoAcidAlphabet(), BioSymbols.AA_INVALID)
         end
+        
+        @testset "Char" begin
+            @test encode(CharAlphabet(), Char(0x0010ffff)) == 0xf48fbfbf
+            @test encode(CharAlphabet(), 'A') == 0x41000000
+            @test_throws EncodeError encode(CharAlphabet(), Char(0x0010ffff) + 1)
+        end
     end
     
     
@@ -230,6 +248,12 @@
                 @test decode(AminoAcidAlphabet(), x) === convert(AminoAcid, x)
             end
             @test_throws BioSequences.DecodeError decode(AminoAcidAlphabet(), 0x1c)
+        end
+        
+        @testset "Char" begin
+            @test decode(CharAlphabet(), 0xf48fbfbf) == Char(0x0010ffff)
+            @test decode(CharAlphabet(), 0x41000000) == 'A'
+            @test_throws DecodeError decode(CharAlphabet(), 0xf48fbfbf + 0x00000001)
         end
     end
 

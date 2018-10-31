@@ -148,6 +148,8 @@ end
 include("symbols.jl")
 include("alphabets.jl")
 
+@test gap(Char) == '-'
+
 @testset "Sequences" begin
     a = dna"A-CG-G"; b = rna"A-CG-G"; c = aa"AK-MV-";
     @test ungap(a) == dna"ACGG"
