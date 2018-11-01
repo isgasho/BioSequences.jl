@@ -7,7 +7,7 @@
            ST("CCTGGCCAAGGGGC")]
            
     @test eltype(BioSequences.EachSkipmerIterator{ST,UInt64,typeof(seq)}) == ST
-    @test Base.IteratorSize() == Base.HasLength()
+    @test Base.IteratorSize(BioSequences.EachSkipmerIterator{ST,UInt64,typeof(seq)}) == Base.HasLength()
     @test Base.IteratorEltype(BioSequences.EachSkipmerIterator{ST,UInt64,typeof(seq)}) == Base.HasEltype()
     @test BioSequences.kmersize(BioSequences.EachSkipmerIterator(ST, seq)) == 14
     @test BioSequences.firstoffset(BioSequences.EachSkipmerIterator(ST, seq)) == 26
