@@ -1,5 +1,5 @@
 
-struct EachSkipmerIterator{SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence}
+struct CanonicalSkipmers{SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence}
     seq::SQ
     cycle_pos::Vector{UInt8}
     last_unknown::Vector{Int64}
@@ -7,20 +7,20 @@ struct EachSkipmerIterator{SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence}
     rkmer::Vector{UT}
 end
 
-@inline Base.IteratorSize(::Type{T}) where T <: EachSkipmerIterator = Base.HasLength()
-@inline Base.IteratorEltype(::Type{T}) where T <: EachSkipmerIterator = Base.HasEltype()
-@inline Base.eltype(::Type{EachSkipmerIterator{SK, UT, SQ}}) where {SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence} = SK
-@inline Base.length(it::EachSkipmerIterator) = length(it.seq) - span(eltype(it)) + 1
+@inline Base.IteratorSize(::Type{T}) where T <: CanonicalSkipmers = Base.HasLength()
+@inline Base.IteratorEltype(::Type{T}) where T <: CanonicalSkipmers = Base.HasEltype()
+@inline Base.eltype(::Type{CanonicalSkipmers{SK, UT, SQ}}) where {SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence} = SK
+@inline Base.length(it::CanonicalSkipmers) = length(it.seq) - span(eltype(it)) + 1
 
-@inline kmersize(x::EachSkipmerIterator) = kmersize(eltype(x))
+@inline kmersize(x::CanonicalSkipmers) = kmersize(eltype(x))
 
-@inline firstoffset(x::EachSkipmerIterator) = (kmersize(x) - 1) * 2
+@inline firstoffset(x::CanonicalSkipmers) = (kmersize(x) - 1) * 2
 
-@inline function kmer_mask(x::EachSkipmerIterator{SK,UT}) where {SK <: Skipmer, UT <: Unsigned}
+@inline function kmer_mask(x::CanonicalSkipmers{SK,UT}) where {SK <: Skipmer, UT <: Unsigned}
     return (UT(1) << (kmersize(SK) * 2)) - 1
 end
 
-function EachSkipmerIterator(::Type{SK}, seq::SQ) where {SK <: Skipmer, SQ <: BioSequence}
+function CanonicalSkipmers(::Type{SK}, seq::SQ) where {SK <: Skipmer, SQ <: BioSequence}
     checkskipmer(SK)
     if span(SK) > length(seq)
         throw(ArgumentError(string("The span of ", SK, " (", span(SK), ") is greater than the input sequence length (", length(seq), ").")))
@@ -29,10 +29,10 @@ function EachSkipmerIterator(::Type{SK}, seq::SQ) where {SK <: Skipmer, SQ <: Bi
     fkmer = Vector{encoded_data_eltype(SK)}(undef, cycle_len(SK))
     rkmer = Vector{encoded_data_eltype(SK)}(undef, cycle_len(SK))
     cycle_pos = Vector{UInt8}(undef, cycle_len(SK))
-    return EachSkipmerIterator{SK, encoded_data_eltype(SK), SQ}(seq, cycle_pos, last_unknown, fkmer, rkmer)
+    return CanonicalSkipmers{SK, encoded_data_eltype(SK), SQ}(seq, cycle_pos, last_unknown, fkmer, rkmer)
 end
 
-@inline function init_iterator!(it::EachSkipmerIterator)
+@inline function init_iterator!(it::CanonicalSkipmers)
     N = cycle_len(eltype(it))
     @inbounds for i in 1:N
         it.cycle_pos[i] = N - i
@@ -42,7 +42,7 @@ end
     end
 end
 
-@inline function _consider_position!(it::EachSkipmerIterator{SK, UT, SQ}, pos) where
+@inline function _consider_position!(it::CanonicalSkipmers{SK, UT, SQ}, pos) where
         {SK, UT, A <: NucleicAcidAlphabet{2}, SQ <: BioSequence{A}}
     N = cycle_len(eltype(it))
     M = bases_per_cycle(eltype(it))
@@ -60,7 +60,7 @@ end
     end
 end
 
-function Base.iterate(it::EachSkipmerIterator{SK, UT, SQ}) where
+function Base.iterate(it::CanonicalSkipmers{SK, UT, SQ}) where
         {SK, UT, A <: NucleicAcidAlphabet{2}, SQ <: BioSequence{A}}
     N = cycle_len(eltype(it))
     M = bases_per_cycle(eltype(it))
@@ -75,7 +75,7 @@ function Base.iterate(it::EachSkipmerIterator{SK, UT, SQ}) where
     return reinterpret(eltype(it), outkmer), (S + 1, UInt(1))
 end
 
-function Base.iterate(it::EachSkipmerIterator{SK, UT, SQ}, state::Tuple{UInt, UInt}) where
+function Base.iterate(it::CanonicalSkipmers{SK, UT, SQ}, state::Tuple{UInt, UInt}) where
         {SK, UT, A <: NucleicAcidAlphabet{2}, SQ <: BioSequence{A}}
     pos = state[1]
     fi  = state[2]
