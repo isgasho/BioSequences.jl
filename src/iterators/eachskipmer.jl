@@ -42,7 +42,8 @@ end
     end
 end
 
-@inline function _consider_position!(it::EachSkipmerIterator, pos)
+@inline function _consider_position!(it::EachSkipmerIterator{SK, UT, SQ}, pos) where
+        {SK, UT, A <: NucleicAcidAlphabet{2}, SQ <: BioSequence{A}}
     N = cycle_len(eltype(it))
     M = bases_per_cycle(eltype(it))
     for ni in 1:N
