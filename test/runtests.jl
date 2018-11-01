@@ -165,6 +165,8 @@ include("alphabets.jl")
     @test BioSequences.bindata_mask(a) == 0x000000000000000f
     @test eltype(a) == DNA
     @test eltype(b) == RNA
+    @test eltype(typeof(a)) == DNA
+    @test eltype(typeof(b)) == RNA
     @test size(a) == (length(a),)
     @test size(b) == (length(b),)
     @test ungap(a) == dna"ACGG"

@@ -3,10 +3,10 @@
     rna_kmer = RNAKmer("ACUG")
 
     @testset "Access DNA Kmer" begin
-        @test dna_kmer[1] == DNA_A
-        @test dna_kmer[2] == DNA_C
-        @test dna_kmer[3] == DNA_T
-        @test dna_kmer[4] == DNA_G
+        @test dna_kmer[1] == BioSequences.inbounds_getindex(dna_kmer, 1) == DNA_A
+        @test dna_kmer[2] == BioSequences.inbounds_getindex(dna_kmer, 2) == DNA_C
+        @test dna_kmer[3] == BioSequences.inbounds_getindex(dna_kmer, 3) == DNA_T
+        @test dna_kmer[4] == BioSequences.inbounds_getindex(dna_kmer, 4) == DNA_G
 
         # Access indexes out of bounds
         @test_throws Exception dna_kmer[-1]
