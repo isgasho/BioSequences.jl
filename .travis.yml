@@ -9,9 +9,6 @@ notifications:
 matrix:
   allow_failures:
   - julia: nightly
-  
-script:
-  - julia --check-bounds=yes --color=yes --inline=no -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("BioSequences"); Pkg.test("BioSequences"; coverage=true)'
 
 after_success:
   - julia -e 'using Pkg; ps=Pkg.PackageSpec(name="Documenter", version="0.19"); Pkg.add(ps); Pkg.pin(ps); Pkg.add("Coverage"); Pkg.add("BioSequences")'

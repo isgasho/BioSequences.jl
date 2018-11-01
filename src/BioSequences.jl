@@ -86,6 +86,14 @@ export
     AA_Term,
     AA_Gap,
     
+    # Alphabets
+    Alphabet,
+    NucleicAcidAlphabet,
+    DNAAlphabet,
+    RNAAlphabet,
+    AminoAcidAlphabet,
+    CharAlphabet,
+    
     # BioSequences
     BioSequence,
     GeneralSequence,
@@ -150,13 +158,7 @@ export
     TwoBit,
     ABIF,
 
-    # Alphabets
-    Alphabet,
-    NucleicAcidAlphabet,
-    DNAAlphabet,
-    RNAAlphabet,
-    AminoAcidAlphabet,
-    CharAlphabet,
+    
 
     # search
     ExactSearchQuery,
