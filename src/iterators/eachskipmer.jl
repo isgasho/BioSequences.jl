@@ -59,7 +59,8 @@ end
     end
 end
 
-function Base.iterate(it::EachSkipmerIterator)
+function Base.iterate(it::EachSkipmerIterator{SK, UT, SQ}) where
+        {SK, UT, A <: NucleicAcidAlphabet{2}, SQ <: BioSequence{A}}
     N = cycle_len(eltype(it))
     M = bases_per_cycle(eltype(it))
     S = span(eltype(it))
@@ -73,7 +74,8 @@ function Base.iterate(it::EachSkipmerIterator)
     return reinterpret(eltype(it), outkmer), (S + 1, UInt(1))
 end
 
-function Base.iterate(it::EachSkipmerIterator, state::Tuple{UInt, UInt})
+function Base.iterate(it::EachSkipmerIterator{SK, UT, SQ}, state::Tuple{UInt, UInt}) where
+        {SK, UT, A <: NucleicAcidAlphabet{2}, SQ <: BioSequence{A}}
     pos = state[1]
     fi  = state[2]
     N = cycle_len(eltype(it))
