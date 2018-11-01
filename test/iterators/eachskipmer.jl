@@ -10,6 +10,7 @@
     @test Base.IteratorSize(BioSequences.EachSkipmerIterator{ST,UInt64,typeof(seq)}) == Base.HasLength()
     @test Base.IteratorEltype(BioSequences.EachSkipmerIterator{ST,UInt64,typeof(seq)}) == Base.HasEltype()
     @test BioSequences.kmersize(BioSequences.EachSkipmerIterator(ST, seq)) == 14
+    @test BioSequences.kmer_mask(BioSequences.EachSkipmerIterator(ST, seq)) == 0x000000000fffffff
     @test BioSequences.firstoffset(BioSequences.EachSkipmerIterator(ST, seq)) == 26
     @test collect(BioSequences.EachSkipmerIterator(ST, seq)) == ans
     @test_throws ArgumentError BioSequences.EachSkipmerIterator(Skipmer{DNAAlphabet{2},1,3,14}, seq)
