@@ -1,8 +1,8 @@
 
-struct EachSkipmerIterator{SK <: Skipmer, UT <: Unsigned, SQ <: BioSequence}
+struct EachSkipmerIterator{SK <: Skipmer, L <: Union{Nothing, Vector{Int64}}, UT <: Unsigned, SQ <: BioSequence}
     seq::SQ
     cycle_pos::Vector{UInt8}
-    last_unknown::Vector{Int64}
+    last_unknown::L
     fkmer::Vector{UT}
     rkmer::Vector{UT}
 end

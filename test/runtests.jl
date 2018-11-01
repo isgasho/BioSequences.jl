@@ -221,6 +221,8 @@ include("composition.jl")
     include("kmers/shuffle.jl")
 end
 
+include("iterators/eachskipmer.jl")
+
 @testset "Search" begin
     include("search/exact.jl")
     include("search/approximate.jl")
