@@ -160,8 +160,8 @@ include("alphabets.jl")
     @test BioSequences.bits_per_symbol(RNASequence()) == 4
     a = dna"A-CG-G"; b = rna"A-CG-G"; c = aa"AK-MV-";
     @test BioSequences.symbols_per_data_element(a) == 16
-    @test firstbitindex(a) == bitindex(a, 1)
-    @test lastbitindex(a) == bitindex(a, lastindex(a))
+    @test BioSequences.firstbitindex(a) == BioSequences.bitindex(a, 1)
+    @test BioSequences.lastbitindex(a) == BioSequences.bitindex(a, lastindex(a))
     @test BioSequences.bindata_mask(a) == 0x000000000000000f
     @test eltype(a) == DNA
     @test eltype(b) == RNA
