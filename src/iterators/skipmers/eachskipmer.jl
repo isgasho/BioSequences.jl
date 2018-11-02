@@ -93,4 +93,58 @@ function Base.iterate(it::CanonicalSkipmers{SK, UT, SQ}, state::Tuple{UInt, UInt
     return reinterpret(eltype(it), outkmer), (pos + 1, fi)  
 end
 
+function Base.iterate(it::CanonicalSkipmers{SK, UT, SQ}) where 
+        {SK, UT, A <: NucleicAcidAlphabet{4}, SQ <: BioSequence{A}}
+    N = cycle_len(eltype(it))
+    M = bases_per_cycle(eltype(it))
+    S = span(eltype(it))
+    init_iterator!(it)
+    pos = firstindex(it.seq)
+    lastpos = lastindex(seq)
+    
+    while pos <= lastpos
+        
+        for ni in 1:N
+            cycle_pos[ni] += 1
+            if cycle_pos[ni] == N
+                cycle_pos[ni] = 0
+            end
+            
+            if cycle_pos[ni] < M
+                println("Sequence position: ", p, ", Phase: ", ni)
+                fbits = BioSequences.twobitnucs[reinterpret(UInt8, seq[pos]) + 0x01]
+                if fbits == 0xFF
+                    it.last_unknown[ni] = pos
+                    fbits = 0x00
+                end
+                rbits = ~fbits & 0x03
+                fkmer[ni] = ((fkmer[ni] << 2) | fbits) & kmer_mask
+                rkmer[ni] = (rkmer[ni] >> 2) | (UInt64(rbits) << firstoffset)
+            end
+        end
+        
+        # If we are at pos, the skip-mer that started at pos-S is now done. 
+        if pos >= S
+            if pos == S
+                fi = 0x01
+            else
+                fi += 0x01
+                if fi == (N + 1)
+                    fi = 0x01
+                end
+            end
+            if last_unknown[fi] + S <= pos
+                outkmer = ifelse(fkmer[fi] <= rkmer[fi], fkmer[fi], rkmer[fi])
+                return reinterpret(SK, outkmer), (pos + 1, fi)
+            end
+        end
+        
+        pos += 1
+        
+    end
+    
+    return nothing
+    
+end
+
 
