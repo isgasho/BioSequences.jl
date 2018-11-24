@@ -139,6 +139,7 @@
             continue
         end
         filename = specimen["filename"]
+        println(joinpath(path, filename), ": ", valid)
         test_fastq_parse(joinpath(path, filename), valid)
     end
 
