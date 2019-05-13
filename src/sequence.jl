@@ -36,6 +36,8 @@ Base.eachindex(seq::Sequence) = 1:lastindex(seq)
     throw(BoundsError(seq, i))
 end
 
+
+
 @inline function Base.getindex(seq::Sequence, i::Integer)
     @boundscheck checkbounds(seq, i)
     return inbounds_getindex(seq, i)
@@ -47,6 +49,18 @@ function Base.iterate(seq::Sequence, i::Int=1)
     else
         return inbounds_getindex(seq, i), i + 1
     end
+end
+
+@inline function Base.getindex(seq::BioSequence{A}, v::Vector{Integer}) where{T} where{A}
+    subseq = BioSequence{A}(0)
+    for i in v
+        @boundscheck checkbounds(seq, i)
+    end
+    for i in v
+        x =  my_inbounds_getindex(seq, i)
+        push!(subseq,x)
+    end
+    return subseq
 end
 
 
