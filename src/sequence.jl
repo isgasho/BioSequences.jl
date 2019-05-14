@@ -43,6 +43,14 @@ end
     return inbounds_getindex(seq, i)
 end
 
+@inline function Base.getindex(seq::Sequence, v::Vector{T}) where{T}
+    for i in v
+        @boundscheck checkbounds(seq, i)
+    end
+    subseq = inbounds_getindex(seq,v)
+    return subseq
+end
+
 function Base.iterate(seq::Sequence, i::Int=1)
     if i > lastindex(seq)
         return nothing
@@ -51,17 +59,7 @@ function Base.iterate(seq::Sequence, i::Int=1)
     end
 end
 
-@inline function Base.getindex(seq::BioSequence{A}, v::Vector{Integer}) where{T} where{A}
-    subseq = BioSequence{A}(0)
-    for i in v
-        @boundscheck checkbounds(seq, i)
-    end
-    for i in v
-        x =  my_inbounds_getindex(seq, i)
-        push!(subseq,x)
-    end
-    return subseq
-end
+
 
 
 # Comparison

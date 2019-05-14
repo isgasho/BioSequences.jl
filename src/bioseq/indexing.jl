@@ -56,9 +56,20 @@ mask(::Type{A}) where {A<:Alphabet} = mask(bitsof(A))
     return BitIndex((i + first(seq.part) - 2) << trailing_zeros(bitsof(A)))
 end
 
+
+
 @inline function inbounds_getindex(seq::BioSequence{A}, i::Integer) where {A}
     j = bitindex(seq, i)
     @inbounds return decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
+end
+
+@inline function inbounds_getindex(seq::BioSequence{A}, v::Vector{T}) where {A} where{T}<:Integer
+    subseq = BioSequence{A}(0)
+    for i in v
+        x =  inbounds_getindex(seq, i)
+        push!(subseq,x)
+    end
+    subseq
 end
 
 Base.getindex(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
