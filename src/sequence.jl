@@ -43,7 +43,7 @@ end
     return inbounds_getindex(seq, i)
 end
 
-@inline function Base.getindex(seq::Sequence, v::Vector{T}) where{T}
+@inline function Base.getindex(seq::Sequence, v::Vector{<:Integer})
     for i in v
         @boundscheck checkbounds(seq, i)
     end

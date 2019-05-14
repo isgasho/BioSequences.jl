@@ -63,7 +63,7 @@ end
     @inbounds return decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
 end
 
-@inline function inbounds_getindex(seq::BioSequence{A}, v::Vector{T}) where {A} where{T}<:Integer
+@inline function inbounds_getindex(seq::BioSequence{A}, v::Vector{<:Integer}) where {A} 
     subseq = BioSequence{A}(0)
     for i in v
         x =  inbounds_getindex(seq, i)
