@@ -291,6 +291,49 @@ function Random.shuffle(kmer::Kmer{T,k}) where {T,k}
     return kmer
 end
 
+# random k-mer generators
+# -----------------------
+
+"""
+    generate_kmer(::Type{Kmer{T,K}},len::Int64)where{T,K}
+
+Return a random kmer of  length len (len = K)
+
+generate_kmer generates a random string of length k using the corresponding alphabet for the NucleicAcid type
+and converts it into a Kmer variable
+"""
+function generate_kmer(::Type{Kmer{T,K}},len::Int64)where{T,K}
+   if T == DNA
+       alp = "ATGC"
+   elseif T == RNA
+       alp = "AUGC"
+   else
+       throw(ArgumentError("Cannot generate a kmer of  type $(T)"))
+   end
+   if K!=len
+       throw(ArgumentError("cannot create a $(K)-mer of length $(len)"))
+   end
+   Kmer{T,K}(randstring(alp,len))
+end
+
+"""
+    generate_random_kmers(::Type{X},len::Int64,size::Int64) where{X<:NucleicAcid}
+
+Returns size k-mers of length len of type X
+
+generate_random_kmers uses the generate_kmer function to generate a vector of k-mers in a single line.
+This is useful to gain time during creating toy datasets for experimentations
+Also acts in a similar spirit to monitors frequently for hardwares to ensure the function works properly.
+"""
+function generate_random_kmers(::Type{X},len::Int64,size::Int64) where{X<:NucleicAcid}
+    seqs = Vector{Kmer{X,len}}()
+    for i in 1:size
+        seq = generate_kmer(Kmer{X,len},len)
+        push!(seqs,seq)
+    end
+    seqs
+end
+
 # Swap two nucleotides at `i` and `j`.
 function swap(kmer::Kmer{T,k}, i, j) where {T,k}
     i = 2k - 2i
