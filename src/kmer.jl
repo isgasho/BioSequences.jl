@@ -303,17 +303,19 @@ generate_kmer generates a random string of length k using the corresponding alph
 and converts it into a Kmer variable
 """
 function generate_kmer(::Type{Kmer{T,K}},len::Int64)where{T,K}
-   if T == DNA
-       alp = "ATGC"
-   elseif T == RNA
-       alp = "AUGC"
-   else
-       throw(ArgumentError("Cannot generate a kmer of  type $(T)"))
-   end
-   if K!=len
-       throw(ArgumentError("cannot create a $(K)-mer of length $(len)"))
-   end
-   Kmer{T,K}(randstring(alp,len))
+    if T!=DNA or T!=RNA
+        throw(ArgumentError("Cannot generate a kmer of  type $(T)"))
+    end
+    if K!=len
+        throw(ArgumentError("cannot create a $(K)-mer of length $(len)"))
+    end
+    alp = alphabet(A)
+    str_alp = ""
+    for a in alp
+        str_alp = str_alp*string(convert(Char,a))
+    end
+
+    Kmer{T,K}(randstring(str_alp,len))
 end
 
 """
@@ -323,7 +325,7 @@ Returns size k-mers of length len of type X
 
 generate_random_kmers uses the generate_kmer function to generate a vector of k-mers in a single line.
 This is useful to gain time during creating toy datasets for experimentations
-Also acts in a similar spirit to monitors frequently for hardwares to ensure the function works properly.
+Also acts in a similar spirit to monitors frequently used for hardwares to ensure the function works properly.
 """
 function generate_random_kmers(::Type{X},len::Int64,size::Int64) where{X<:NucleicAcid}
     seqs = Vector{Kmer{X,len}}()
