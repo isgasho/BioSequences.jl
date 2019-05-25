@@ -291,6 +291,17 @@ function Random.shuffle(kmer::Kmer{T,k}) where {T,k}
     return kmer
 end
 
+
+# Swap two nucleotides at `i` and `j`.
+function swap(kmer::Kmer{T,k}, i, j) where {T,k}
+    i = 2k - 2i
+    j = 2k - 2j
+    b = convert(UInt64, kmer)
+    x = ((b >> i) ⊻ (b >> j)) & UInt64(0x03)
+    return Kmer{T,k}(b ⊻ ((x << i) | (x << j)))
+end
+
+
 # random k-mer generators
 # -----------------------
 
@@ -336,14 +347,6 @@ function generate_random_kmers(::Type{X},len::Int64,size::Int64) where{X<:Nuclei
     seqs
 end
 
-# Swap two nucleotides at `i` and `j`.
-function swap(kmer::Kmer{T,k}, i, j) where {T,k}
-    i = 2k - 2i
-    j = 2k - 2j
-    b = convert(UInt64, kmer)
-    x = ((b >> i) ⊻ (b >> j)) & UInt64(0x03)
-    return Kmer{T,k}(b ⊻ ((x << i) | (x << j)))
-end
 
 # String literal
 # --------------
