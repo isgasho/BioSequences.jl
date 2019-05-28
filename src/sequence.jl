@@ -86,6 +86,11 @@ function Base.cmp(seq1::Sequence, seq2::Sequence)
     return cmp(m, n)
 end
 
+# Substring matching
+# ----------
+function is_match(seq1::Sequence,seq1s::Int64,seq2::Sequence,seq2s::Int64,len::Int64)
+    return String(seq1)[seq1s:seq1s+len-1] == String(seq2)[seq2s:seq2s+len-1]
+end
 
 # Finders
 # -------

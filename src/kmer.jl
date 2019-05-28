@@ -38,8 +38,20 @@ const RNACodon = RNAKmer{3}
 
 length(::Kmer{T,K}) where {T,K} = K
 
-#take the subsequence of kmer generate a new type 
+#take the subsequence of kmer generate a new type using the index ind
+#
+# sub_seq(Kmer{DNA,8},3) generates a kmer of type Kmer{DNA,6} which contains the same nucleic acid sequence with
+# the initial kmer starting from index 3
+#
+#
+#
+
+"""
+Special way of subsequencing kmers since we define each kmer type separately
+"""
 sub_seq(kmer::Kmer{T,K},ind::Int64) where{T,K} = Kmer{T,K-ind+1}(String(kmer)[ind:end])
+
+
 
 function Kmer(nts::T...) where {T<:NucleicAcid}
     return make_kmer(nts)
