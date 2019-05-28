@@ -253,7 +253,7 @@ function showcompact(io::IO, seq::Sequence)
         print(io, "< EMPTY SEQUENCE >")
     else
         width = displaysize()[2]
-        if length(seq) > width
+        if z(seq) > width
             half = div(width, 2)
             for i in 1:half-1
                 print(io, seq[i])
