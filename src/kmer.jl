@@ -38,6 +38,9 @@ const RNACodon = RNAKmer{3}
 
 length(::Kmer{T,K}) where {T,K} = K
 
+#take the subsequence of kmer generate a new type 
+sub_seq(kmer::Kmer{T,K},ind::Int64) where{T,K} = Kmer{T,K-ind+1}(String(kmer)[ind:end])
+
 function Kmer(nts::T...) where {T<:NucleicAcid}
     return make_kmer(nts)
 end
