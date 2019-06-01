@@ -29,6 +29,8 @@ Base.size(seq::Sequence) = (length(seq),)
 Base.lastindex(seq::Sequence) = length(seq)
 Base.eachindex(seq::Sequence) = 1:lastindex(seq)
 
+
+
 @inline function Base.checkbounds(seq::Sequence, i::Integer)
     if 1 ≤ i ≤ lastindex(seq)
         return true

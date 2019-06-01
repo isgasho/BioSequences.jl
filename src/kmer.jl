@@ -36,8 +36,6 @@ const RNAKmer{K} = Kmer{RNA, K}
 const DNACodon = DNAKmer{3}
 const RNACodon = RNAKmer{3}
 
-Base.length(::Kmer{T,K}) where {T,K} = K
-
 #take the subsequence of kmer generate a new type using the index ind
 #
 # sub_seq(Kmer{DNA,8},3) generates a kmer of type Kmer{DNA,6} which contains the same nucleic acid sequence with
