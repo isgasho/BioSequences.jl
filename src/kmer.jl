@@ -328,8 +328,8 @@ Return a random kmer of  length len (len = K)
 generate_kmer generates a random string of length k using the corresponding alphabet for the NucleicAcid type
 and converts it into a Kmer variable
 """
-function generate_kmer(::Type{Kmer{T,K}},len::Int64)where{T,K}
-    if T!=DNA or T!=RNA
+function generate_kmer(::Type{Kmer{T,K}},len::Int64) where{T,K}
+    if T!=DNA && T!=RNA
         throw(ArgumentError("Cannot generate a kmer of  type $(T)"))
     end
     if K!=len
