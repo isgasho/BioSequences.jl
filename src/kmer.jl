@@ -36,7 +36,7 @@ const RNAKmer{K} = Kmer{RNA, K}
 const DNACodon = DNAKmer{3}
 const RNACodon = RNAKmer{3}
 
-length(::Kmer{T,K}) where {T,K} = K
+Base.length(::Kmer{T,K}) where {T,K} = K
 
 #take the subsequence of kmer generate a new type using the index ind
 #
