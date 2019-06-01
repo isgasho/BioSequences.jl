@@ -59,14 +59,14 @@ const RNASequence       = BioSequence{RNAAlphabet{4}}
 const AminoAcidSequence = BioSequence{AminoAcidAlphabet}
 const CharSequence      = BioSequence{CharAlphabet}
 
-"Gets the alphabet encoding of a given BioSequence."
+#Gets the alphabet encoding of a given BioSequence
 BioSymbols.alphabet(::Type{BioSequence{A}}) where {A} = alphabet(A)
 
 Base.length(seq::BioSequence) = length(seq.part)
 Base.eltype(::Type{BioSequence{A}}) where {A} = eltype(A)
 
-"Gets the suffix starting from index ind "
-"Used during path checking in dbgs"
+#Gets the suffix starting from index ind #
+#Used during path checking in dbgs"
 sub_seq(seq::Sequence,ind::Int64) = typeof(seq)(String(seq)[ind:end])
 
 function seq_data_len(::Type{A}, len::Integer) where {A}
