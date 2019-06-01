@@ -48,6 +48,7 @@ const RNACodon = RNAKmer{3}
 Special way of subsequencing kmers since we define each kmer type separately
 """
 sub_seq(kmer::Kmer{T,K},ind::Int64) where{T,K} = Kmer{T,K-ind+1}(String(kmer)[ind:end])
+sub_seq2(kmer::Kmer{T,K},ind::Int64) where{T,K} = Kmer{T,K-ind+1}(String(kmer)[ind:end])
 
 
 
