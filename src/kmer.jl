@@ -48,9 +48,20 @@ const RNACodon = RNAKmer{3}
 Special way of subsequencing kmers since we define each kmer type separately
 """
 sub_seq(kmer::Kmer{T,K},ind::Int64) where{T,K} = Kmer{T,K-ind+1}(String(kmer)[ind:end])
-sub_seq2(kmer::Kmer{T,K},ind::Int64) where{T,K} = Kmer{T,K-ind+1}(String(kmer)[ind+1:end])
 
+"""
+    canonical_kmer_set(vec::Vector{Kmer{T,K}})where{T,K}
 
+Returns a set of kmers all their canonical form
+"""
+## turn a list of kmers in a set of kmers all  in their canonical form
+function canonical_kmer_set(vec::Vector{Kmer{T,K}})where{T,K}
+    set1 = Set{Kmer{T,K}}()
+    for kmer in vec
+        push!(set1,canonical(kmer))
+    end
+    set1
+end
 
 function Kmer(nts::T...) where {T<:NucleicAcid}
     return make_kmer(nts)
