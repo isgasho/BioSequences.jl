@@ -69,17 +69,37 @@ end
 =#
 
 @inline function rightshift_carry(x::NTuple{N,UInt64}, nbits::Integer) where {N}
-    return _rightshift(n, zero(UInt64), x...)
+    return _rightshift(nbits, zero(UInt64), x...)
 end
 
 @inline function _rightshift_carry(nbits::Integer, carry::UInt64, head::UInt64, tail...)
-    return ((head >> nbits) | carry, _rightshift(nbits, (head & ((one(UInt64) << nbits) - 1)) << (64 - nbits), tail...)...)
+    return ((head >> nbits) | carry, _rightshift_carry(nbits, (head & ((one(UInt64) << nbits) - 1)) << (64 - nbits), tail...)...)
 end
 
 @inline _rightshift_carry(nbits::Integer, carry::UInt64) = ()
 
 
 # TODO: Work this into a left version of rightshift_carry... which it already is, but only shifts 2 bits, no `nbits` parameter is currently accepted.
+
+@inline function leftshift_carry(x::NTuple{N,UInt64}, nbits::Integer) where {N}
+    _, newbits = _leftshift_carry(nbits, x...)
+    # TODO: The line below is a workaround for julia issues #29114 and #3608
+    return newbits isa UInt64 ? (newbits,) : newbits
+end
+
+@inline function _leftshift_carry(nbits::Integer, head::UInt64, tail...)
+    carry, newtail = _leftshift_carry(nbits, tail...)
+    # TODO: The line below is a workaround for julia issues #29114 and #36087
+    newtail′ = newtail isa UInt64 ? (newtail,) : newtail 
+    return head >> (64 - nbits), ((head << nbits) | carry, newtail′...)
+end
+
+@inline _leftshift_carry(nbits::Integer, head::UInt64) = head >> (64 - nbits), head << nbits
+
+# TODO: Implement leftshift_carry(nbits::Integer)
+
+
+#=
 """
     shiftleft
 
@@ -110,7 +130,7 @@ end
 end
 
 @inline _shiftleft(head::UInt64) = (head & 0xC000000000000000) >> 62, head << 2
-
+=#
 
 ###
 ### Transformation methods

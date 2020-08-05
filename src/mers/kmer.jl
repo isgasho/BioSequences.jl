@@ -4,6 +4,7 @@
 
 """
     Kmer{A<:NucleicAcidAlphabet{2},K,N} <: BioSequence{A}
+
 A parametric, immutable, bitstype for representing Kmers - short sequences.
 Given the number of Kmers generated from raw sequencing reads, avoiding
 repetetive memory allocation and triggering of garbage collection is important,
@@ -14,6 +15,7 @@ manipulated and so by and large don't have to be mutable like `LongSequence`s.
 Excepting their immutability, they fulfill the rest of the API and behaviours
 expected from a concrete `BioSequence` type, and non-mutating transformations
 of the type are still defined.
+
 !!! warning
     Given their immutability, `setindex` and mutating sequence transformations
     are not implemented for kmers e.g. `reverse_complement!`. 
@@ -175,7 +177,7 @@ include("transformations.jl")
 
 # TODO: Decide on this vs. old iterator pattern. I like the terseness of the code vs defining an iterator. Neither allocate.
 fw_neighbors(kmer::Kmer) = ntuple(Val{4}(), i -> kmer << ACGT[i])
-
+bw_neighbors(kmer::Kmer) = ntuple(Val{4}(), i -> ACGT[i] >> kmer)
 
 #=
 # Neighbors on a de Bruijn graph
