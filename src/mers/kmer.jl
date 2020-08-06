@@ -47,35 +47,12 @@ function (::Type{Kmer{A,K,N}})(seq::LongSequence{A}) where {A<:NucleicAcidAlphab
     if seqlen != K
         throw(ArgumentError("seq does not contain the correct number of nucleotides ($seqlen ≠ $K)"))
     end
-    checkmer(Kmer{A,K,N})
-
-    # Construct the head.
-    bases_in_head = div(64 - (64N - 2K), 2)
-    head = zero(UInt64)
-    @inbounds for i in 1:bases_in_head
-        nt = convert(eltype(typeof(seq)), seq[i])
-        head = (head << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
-    end
-    
-    # And the rest of the sequence
-    idx = Ref(bases_in_head + 1)
-    
-    tail = ntuple(Val{N - 1}()) do i
-        Base.@_inline_meta
-        body = zero(UInt64)
-        @inbounds for i in 1:32
-            nt = convert(eltype(typeof(seq)), seq[idx[]])
-            body = (body << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
-            idx[] += 1
-        end
-        return body
-    end
-
-    return T((head, tail...))
+    data = _build_kmer_data(seq, Kmer{A,K,N})
+    return Kmer{A,K,N}(data)
 end
 
-
 @inline function _build_kmer_data(nucs, ::Type{Kmer{A,K,N}}) where {A,K,N}
+    checkmer(Kmer{A,K,N})
     # Construct the head.
     bases_in_head = div(64 - (64N - 2K), 2)
     head = zero(UInt64)
@@ -237,8 +214,8 @@ include("transformations.jl")
 ###
 
 # TODO: Decide on this vs. old iterator pattern. I like the terseness of the code vs defining an iterator. Neither allocate.
-fw_neighbors(kmer::Kmer) = ntuple(Val{4}(), i -> kmer << ACGT[i])
-bw_neighbors(kmer::Kmer) = ntuple(Val{4}(), i -> ACGT[i] >> kmer)
+fw_neighbors(kmer::Kmer) = ntuple(i -> kmer << ACGT[i], Val{4}())
+bw_neighbors(kmer::Kmer) = ntuple(i -> ACGT[i] >> kmer, Val{4}())
 
 #=
 # Neighbors on a de Bruijn graph

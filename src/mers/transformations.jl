@@ -32,6 +32,20 @@ end
     return (choptail(x)..., tail)
 end
 
+@inline function setfirst(kmer::Kmer{A,K,N}, nt::DNA) where {A,K,N}
+    x = (64N - 2K)
+    mask = typemax(UInt64) >> (x + 2)
+    @inbounds begin
+        ntbits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01]) << (62 - x)
+        newhead = (kmer.data[1] & mask) | ntbits
+    end
+    tail = ntuple(Val{N-1}()) do i
+        Base.@_inline_meta
+        return @inbounds kmer.data[i + 1]
+    end
+    return Kmer{A,K,N}((newhead, tail...))
+end
+
 # Bit-parallel element nucleotide complementation
 @inline function complement_bitpar(x::NTuple{N,U}, a::A) where {N,U<:Unsigned,A<:NucleicAcidAlphabet{2}}
     return _complement_bitpar(a, x...)
@@ -138,10 +152,10 @@ end
 ###
 
 @inline Base.:(>>)(seq::Kmer{A,K,N}, nbases::Integer) where {A,K,N} = rightshift_carry(seq.data, 2nbases)
+@inline Base.:(<<)(seq::Kmer{A,K,N}, nbases::Integer) where {A,K,N} = leftshift_carry(seq.data, 2nbases)
 
-
-@inline function Base.:(<<)(seq::Kmer{DNAAlphabet{2},K,N}, nuc::DNA) where {K,N}
-    return Kmer{A,K,N}(_cliphead(64N - 2K, setlast(shiftleft(packed_data(seq)), nuc)...))
+@inline function Base.:(<<)(seq::Kmer{A,K,N}, nuc::DNA) where {A,K,N}
+    return Kmer{A,K,N}(_cliphead(64N - 2K, setlast(leftshift_carry(packed_data(seq)), nuc)...))
 end
 
 """

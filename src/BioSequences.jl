@@ -174,6 +174,8 @@ export
     
     # Iteration
     neighbors,
+    fw_neighbors,
+    bw_neighbors,
     
     ###
     ### Sequence literals
