@@ -17,19 +17,26 @@ Notably it's used when constructing a Kmer from an existing NTuple of UInt64
     return (head & (typemax(UInt64) >> by), tail...)
 end
 
+#=
 @inline function choptail(x::NTuple{N,UInt64}) where {N}
     ntuple(Val{N - 1}()) do i
         Base.@_inline_meta
         return @inbounds x[i]
     end
 end
+=#
 
-@inline function setlast(x::NTuple{N,UInt64}, nt::DNA) where {N}
+@inline function setlast(kmer::Kmer{A,K,N}, nt::DNA) where {A,K,N}
+    x = kmer.data
     @inbounds begin
         bits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
-        tail = (x[N] & (typemax(UInt64) - UInt64(3))) | bits
+        tail = (kmer.data[N] & (typemax(UInt64) - UInt64(3))) | bits
     end
-    return (choptail(x)..., tail)
+    body = ntuple(Val{N-1}()) do i
+        Base.@_inline_meta
+        return @inbounds x[i]
+    end
+    return Kmer{A,K,N}((body..., tail))
 end
 
 @inline function setfirst(kmer::Kmer{A,K,N}, nt::DNA) where {A,K,N}
