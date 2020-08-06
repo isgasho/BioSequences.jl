@@ -13,7 +13,7 @@ NTuple of UInt64's.
 
 Notably it's used when constructing a Kmer from an existing NTuple of UInt64
 """
-@inline function _cliphead(by::Integer, head::UInt64, tail...)
+@inline function _cliphead(n::Integer, head::UInt64, tail...)
     return (head & (typemax(UInt64) >> by), tail...)
 end
 
@@ -44,15 +44,15 @@ end
 
 @inline _complement_bitpar(a::A) where {A<:NucleicAcidAlphabet{2}} = ()
 
-@inline function reverse(bpe::BitsPerElem{B}, x::NTuple{N,UInt64}) where {B,N}
+@inline function reverse(bpe::BitsPerSymbol{B}, x::NTuple{N,UInt64}) where {B,N}
     return _reverse(bpe, x...)
 end
 
-@inline function _reverse(bpe::BitsPerElem{N}, head::UInt64, tail...) where {N}
+@inline function _reverse(bpe::BitsPerSymbol{N}, head::UInt64, tail...) where {N}
     return (_reverse(bpe, tail...)..., reversebits(head, bpe))
 end
 
-@inline _reverse(::BitsPerElem{N}) = ()
+@inline _reverse(::BitsPerSymbol{N}) where {N} = ()
 
 #=
 @inline function reversebits(x::T, ::BitsPerElem{2}) where {T<:Base.BitUnsigned}
@@ -97,6 +97,7 @@ end
 @inline _leftshift_carry(nbits::Integer, head::UInt64) = head >> (64 - nbits), head << nbits
 
 # TODO: Implement leftshift_carry(nbits::Integer)
+#@inline _leftshift_carry(nbits::Integer) = zero(UInt64), ()
 
 
 #=

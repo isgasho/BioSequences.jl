@@ -29,7 +29,7 @@
 # The state returned at each iteration is the state upon return, not the state
 # needed for the following iteration.
 
-struct MerIterResult{T<:AbstractMer}
+struct MerIterResult{T<:Kmer}
     position::Int
     fw::T
     bw::T
@@ -60,13 +60,13 @@ end
 
 abstract type AbstractMerIterator{T,S} end
 
-struct EveryMerIterator{T<:AbstractMer,S<:BioSequence} <: AbstractMerIterator{T,S}
+struct EveryMerIterator{T<:Kmer,S<:BioSequence} <: AbstractMerIterator{T,S}
     seq::S
     start::Int
     stop::Int
 end
 
-struct SpacedMerIterator{T<:AbstractMer,S<:BioSequence} <: AbstractMerIterator{T,S}
+struct SpacedMerIterator{T<:Kmer,S<:BioSequence} <: AbstractMerIterator{T,S}
     seq::S
     start::Int
     step::Int
@@ -81,13 +81,13 @@ end
 Initialize an iterator over all overlapping k-mers in a sequence `seq` skipping
 ambiguous nucleotides without changing the reading frame.
 """
-function each(::Type{T}, seq::BioSequence) where {T<:AbstractMer}
+function each(::Type{T}, seq::BioSequence) where {T<:Kmer}
     if eltype(seq) ∉ (DNA, RNA)
         throw(ArgumentError("element type must be either DNA or RNA nucleotide"))
     elseif !(1 ≤ ksize(T) ≤ capacity(T))
         throw(ArgumentError("k-mer length must be between 0 and $(capacity(T))"))
     end
-    return EveryMerIterator{T,typeof(seq)}(seq, 1, lastindex(seq))
+    return EveryKmerIterator{T,typeof(seq)}(seq, 1, lastindex(seq))
 end
 
 """
@@ -96,7 +96,7 @@ end
 Initialize an iterator over k-mers separated by a `step` parameter, in a
 sequence `seq` skipping ambiguous nucleotides without changing the reading frame.
 """
-function each(::Type{T}, seq::BioSequence, step::Integer) where {T<:AbstractMer}
+function each(::Type{T}, seq::BioSequence, step::Integer) where {T<:Kmer}
     if eltype(seq) ∉ (DNA, RNA)
         throw(ArgumentError("element type must be either DNA or RNA nucleotide"))
     elseif !(1 ≤ ksize(T) ≤ capacity(T))

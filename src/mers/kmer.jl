@@ -1,5 +1,5 @@
 ###
-### Type definition
+### Kmer Type definition
 ###
 
 """
@@ -26,27 +26,91 @@ of the type are still defined.
 """
 struct Kmer{A<:NucleicAcidAlphabet{2},K,N} <: BioSequence{A}
     data::NTuple{N,UInt64}
+    
+    function Kmer{A,K,N}(data::NTuple{N,UInt64}) where {A<:NucleicAcidAlphabet{2},K,N}
+        checkmer(Kmer{A,K,N})
+        # TODO: Decide on whether this method should always mask the (64N - 2K)
+        # MSBs of the input tuple, as we do that in quite a few cases before
+        # calling this constructor: see the typemin, typemax, rand, and transformations.jl
+        return new(data)
+    end
 end
 
 
-# Aliases
-"Shortcut for the type `Kmer{DNAAlphabet{2},K,N}`"
-const DNAKmer{K,N} = Kmer{DNAAlphabet{2},K,N}
-
-"Shortcut for the type `DNAKmer{27,1}`"
-const DNAKmer27 = DNAKmer{27,1}
-
-"Shortcut for the type `DNAKmer{31,1}`"
-const DNAKmer31 = DNAKmer{31,1}
-
-"Shortcut for the type `DNAKmer{63,2}`"
-const DNAKmer63 = DNAKmer{63,2}
-
-
-
 ###
-### Base Functions
+### Constructors
 ###
+
+# Create a Mer from a sequence.
+function (::Type{Kmer{A,K,N}})(seq::LongSequence{A}) where {A<:NucleicAcidAlphabet{2},K,N}
+    seqlen = length(seq)
+    if seqlen != K
+        throw(ArgumentError("seq does not contain the correct number of nucleotides ($seqlen ≠ $K)"))
+    end
+    checkmer(Kmer{A,K,N})
+
+    # Construct the head.
+    bases_in_head = div(64 - (64N - 2K), 2)
+    head = zero(UInt64)
+    @inbounds for i in 1:bases_in_head
+        nt = convert(eltype(typeof(seq)), seq[i])
+        head = (head << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
+    end
+    
+    # And the rest of the sequence
+    idx = Ref(bases_in_head + 1)
+    
+    tail = ntuple(Val{N - 1}()) do i
+        Base.@_inline_meta
+        body = zero(UInt64)
+        @inbounds for i in 1:32
+            nt = convert(eltype(typeof(seq)), seq[idx[]])
+            body = (body << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
+            idx[] += 1
+        end
+        return body
+    end
+
+    return T((head, tail...))
+end
+
+
+@inline function _build_kmer_data(nucs, ::Type{Kmer{A,K,N}}) where {A,K,N}
+    # Construct the head.
+    bases_in_head = div(64 - (64N - 2K), 2)
+    head = zero(UInt64)
+    @inbounds for i in 1:bases_in_head
+        nt = nucs[i]
+        head = (head << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
+    end
+    # And the rest of the sequence
+    idx = Ref(bases_in_head + 1)
+    
+    tail = ntuple(Val{N - 1}()) do i
+        Base.@_inline_meta
+        body = zero(UInt64)
+        @inbounds for i in 1:32
+            nt = nucs[idx[]]
+            body = (body << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
+            idx[] += 1
+        end
+        return body
+    end
+    
+    return (head, tail...)
+end
+
+@inline function Kmer(nts::Vararg{DNA,K}) where {K}
+    T = kmertype(DNAKmer{K})
+    data = _build_kmer_data(nts, T)
+    return T(data)
+end
+
+@inline function Kmer(nts::Vararg{RNA,K}) where {K}
+    T = kmertype(RNAKmer{K})
+    data = _build_kmer_data(nts, T)
+    return T(data)
+end
 
 """
     kmertype(::Type{Kmer{A,K}}) where {A,K}
@@ -63,6 +127,38 @@ Kmer{DNAAlphabet{2},63,2}
 @inline function kmertype(::Type{Kmer{A,K}}) where {A,K}
     return Kmer{A,K,ifelse(rem(2K, 64) != 0, div(2K, 64) + 1, div(2K, 64))}
 end
+
+# Aliases
+"Shortcut for the type `Kmer{DNAAlphabet{2},K,N}`"
+const DNAKmer{K,N} = Kmer{DNAAlphabet{2},K,N}
+
+"Shortcut for the type `DNAKmer{27,1}`"
+const DNAKmer27 = DNAKmer{27,1}
+
+"Shortcut for the type `DNAKmer{31,1}`"
+const DNAKmer31 = DNAKmer{31,1}
+
+"Shortcut for the type `DNAKmer{63,2}`"
+const DNAKmer63 = DNAKmer{63,2}
+
+"Shortcut for the type `Kmer{RNAAlphabet{2},K,N}`"
+const RNAKmer{K,N} = Kmer{RNAAlphabet{2},K,N}
+
+"Shortcut for the type `RNAKmer{27,1}`"
+const RNAKmer27 = RNAKmer{27,1}
+
+"Shortcut for the type `RNAKmer{31,1}`"
+const RNAKmer31 = RNAKmer{31,1}
+
+"Shortcut for the type `RNAKmer{63,2}`"
+const RNAKmer63 = RNAKmer{63,2}
+
+const DNACodon = DNAKmer{3,1}
+const RNACodon = RNAKmer{3,1}
+
+###
+### Base Functions
+###
 
 @inline capacity(::Type{Kmer{A,K,N}}) where {A,K,N} = div(64N, 2)
 @inline capacity(seq::Kmer) = capacity(typeof(seq))
@@ -116,42 +212,7 @@ end
 #Base.:+(x::AbstractMer, y::AbstractMer) = y + x
 #Alphabet(::Type{Mer{A,K} where A<:NucleicAcidAlphabet{2}}) where {K} = Any
 
-###
-### Constructors
-###
 
-# Create a Mer from a sequence.
-function (::Type{Kmer{A,K,N}})(seq::LongSequence{A}) where {A<:NucleicAcidAlphabet{2},K,N}
-    seqlen = length(seq)
-    if seqlen != K
-        throw(ArgumentError("seq does not contain the correct number of nucleotides ($seqlen ≠ $K)"))
-    end
-    checkmer(Kmer{A,K,N})
-
-    # Construct the head.
-    bases_in_head = div(64 - (64N - 2K), 2)
-    head = zero(UInt64)
-    @inbounds for i in 1:bases_in_head
-        nt = convert(eltype(typeof(seq)), seq[i])
-        head = (head << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
-    end
-    
-    # And the rest of the sequence
-    idx = Ref(bases_in_head + 1)
-    
-    tail = ntuple(Val{N - 1}()) do i
-        Base.@_inline_meta
-        body = zero(UInt64)
-        @inbounds for i in 1:32
-            nt = convert(eltype(typeof(seq)), seq[idx[]])
-            body = (body << 2) | UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
-            idx[] += 1
-        end
-        return body
-    end
-
-    return Kmer{A,K,N}((head, tail...))
-end
 
 @inline function inbounds_getindex(x::Kmer{A,K,N}, i::Integer) where {A,K,N}
     # Emulation of BitIndex type

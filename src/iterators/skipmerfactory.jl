@@ -6,7 +6,7 @@
 ### This file is a part of BioJulia.
 ### License is MIT: https://github.com/BioJulia/BioSequences.jl/blob/master/LICENSE.md
 
-struct SkipmerFactoryResult{T<:AbstractMer}
+struct SkipmerFactoryResult{T<:Kmer}
     position::Int
     fw::T
     bw::T
@@ -28,7 +28,7 @@ mutable struct SkipmerFactory{S<:LongNucleotideSequence,U<:Unsigned,K}
     function SkipmerFactory(::Type{T},
                             seq::LongSequence{A},
                             bases_per_cycle::Int = 2,
-                            cycle_len::Int = 3) where {A<:NucleicAcidAlphabet,T<:AbstractMer}
+                            cycle_len::Int = 3) where {A<:NucleicAcidAlphabet,T<:Kmer}
         
         checkmer(T)
         
@@ -242,6 +242,6 @@ skipping ambiguous nucleotides without changing the reading frame.
     Please see the BioSequences user manual for more details of how a skipmer is
     constructed.
 """
-@inline function each(::Type{T}, seq::BioSequence, bases_per_cycle::Int, cycle_len::Int) where {T<:AbstractMer}
+@inline function each(::Type{T}, seq::BioSequence, bases_per_cycle::Int, cycle_len::Int) where {T<:Kmer}
     return SkipmerFactory(T, seq, bases_per_cycle, cycle_len)
 end

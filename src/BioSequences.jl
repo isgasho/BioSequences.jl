@@ -160,19 +160,15 @@ export
     ###
     
     # Type & aliases
-    AbstractMer,
-    Mer,
-    DNAMer,
-    RNAMer,
+    Kmer,
     DNAKmer,
+    DNAKmer27,
+    DNAKmer31,
+    DNAKmer63,
     RNAKmer,
-    
-    BigMer,
-    BigDNAMer,
-    BigRNAMer,
-    BigDNAKmer,
-    BigRNAKmer,
-    
+    RNAKmer27,
+    RNAKmer31,
+    RNAKmer63,
     DNACodon,
     RNACodon,
     
@@ -283,8 +279,8 @@ include("longsequences/longsequence.jl")
 include("longsequences/hash.jl")
 include("longsequences/randseq.jl")
 
-# The definition of the Skipmer concrete type, and its method overloads...
-include("mers/mer.jl")
+# The definition of the Kmer concrete type, and its method overloads...
+include("mers/kmer.jl")
 
 # The definition of the ReferenceSequence concrete type, and its method overloads...
 include("nmask.jl")
@@ -292,12 +288,12 @@ include("refseq/refseq.jl")
 
 # The generic iterators for any BioSequence...
 include("iterators/condition.jl")
-include("iterators/eachmer.jl")
-include("iterators/skipmerfactory.jl")
+#include("iterators/eachmer.jl")
+#include("iterators/skipmerfactory.jl")
 
-include("composition.jl")
+#include("composition.jl")
 
-include("geneticcode.jl")
+#include("geneticcode.jl")
 include("demultiplexer.jl")
 
 # Pattern searching in sequences...
@@ -306,6 +302,6 @@ include("search/approx.jl")
 include("search/re.jl")
 include("search/pwm.jl")
 
-include("minhash.jl")
+#include("minhash.jl")
 
 end  # module BioSequences
