@@ -17,20 +17,11 @@ Notably it's used when constructing a Kmer from an existing NTuple of UInt64
     return (head & (typemax(UInt64) >> by), tail...)
 end
 
-#=
-@inline function choptail(x::NTuple{N,UInt64}) where {N}
-    ntuple(Val{N - 1}()) do i
-        Base.@_inline_meta
-        return @inbounds x[i]
-    end
-end
-=#
-
 @inline function setlast(kmer::Kmer{A,K,N}, nt::DNA) where {A,K,N}
     x = kmer.data
     @inbounds begin
         bits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
-        tail = (kmer.data[N] & (typemax(UInt64) - UInt64(3))) | bits
+        tail = (x[N] & (typemax(UInt64) - UInt64(3))) | bits
     end
     body = ntuple(Val{N-1}()) do i
         Base.@_inline_meta
@@ -40,15 +31,16 @@ end
 end
 
 @inline function setfirst(kmer::Kmer{A,K,N}, nt::DNA) where {A,K,N}
-    x = (64N - 2K)
-    mask = typemax(UInt64) >> (x + 2)
+    x = kmer.data
+    n = (64N - 2K)
+    mask = typemax(UInt64) >> (n + 2)
     @inbounds begin
-        ntbits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01]) << (62 - x)
-        newhead = (kmer.data[1] & mask) | ntbits
+        ntbits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01]) << (62 - n)
+        newhead = (x[1] & mask) | ntbits
     end
     tail = ntuple(Val{N-1}()) do i
         Base.@_inline_meta
-        return @inbounds kmer.data[i + 1]
+        return @inbounds x[i + 1]
     end
     return Kmer{A,K,N}((newhead, tail...))
 end
@@ -89,6 +81,16 @@ end
 end
 =#
 
+#=
+rightshift_carry & leftshift_carry
+
+These methods are micro-optimised (or should be!!!) for shifting the bits in 
+an NTuple of unsigned integers, carrying the bits "shifted off" one word 
+over to the next word. The carry can also be "seeded" so as other methods like
+pushfirst and pushlast can be efficiently implemented without duplication of code
+or less efficient implementations that first shift and then insert an element.
+=#
+
 @inline function rightshift_carry(x::NTuple{N,UInt64}, nbits::Integer) where {N}
     return _rightshift(nbits, zero(UInt64), x...)
 end
@@ -99,71 +101,40 @@ end
 
 @inline _rightshift_carry(nbits::Integer, carry::UInt64) = ()
 
-
-# TODO: Work this into a left version of rightshift_carry... which it already is, but only shifts 2 bits, no `nbits` parameter is currently accepted.
-
-@inline function leftshift_carry(x::NTuple{N,UInt64}, nbits::Integer) where {N}
-    _, newbits = _leftshift_carry(nbits, x...)
-    # TODO: The line below is a workaround for julia issues #29114 and #3608
-    return newbits isa UInt64 ? (newbits,) : newbits
+@inline function leftshift_carry(x::NTuple{N,UInt64}, nbits::Integer, prevcarry::UInt64 = zero(UInt64)) where {N}
+    _, newbits = _leftshift_carry(nbits, prevcarry, x...)
+    return newbits
 end
 
-@inline function _leftshift_carry(nbits::Integer, head::UInt64, tail...)
-    carry, newtail = _leftshift_carry(nbits, tail...)
-    # TODO: The line below is a workaround for julia issues #29114 and #36087
-    newtail′ = newtail isa UInt64 ? (newtail,) : newtail 
-    return head >> (64 - nbits), ((head << nbits) | carry, newtail′...)
+@inline function _leftshift_carry(nbits::Integer, prevcarry::UInt64, head::UInt64, tail...)
+    carry, newtail = _leftshift_carry(nbits, prevcarry, tail...)
+    return head >> (64 - nbits), ((head << nbits) | carry, newtail...)
 end
 
-@inline _leftshift_carry(nbits::Integer, head::UInt64) = head >> (64 - nbits), head << nbits
-
-# TODO: Implement leftshift_carry(nbits::Integer)
-#@inline _leftshift_carry(nbits::Integer) = zero(UInt64), ()
+@inline _leftshift_carry(nbits::Integer, prevcarry::UInt64) = prevcarry, ()
 
 
-#=
-"""
-    shiftleft
-
-It is important to be able to efficiently shift the all the nucleotides in a kmer
-one space to the left or right, as it is a key operation in iterating through
-de bruijn graph neighbours or in building kmers a nucleotide at a time.
-"""
-function shiftleft end
-
-@inline function shiftleft(x::Kmer{A,K,N}) where {A,K,N}
-    _, newbits = _shiftleft(x.data...)
-    # TODO: The line below is a workaround for julia issues #29114 and #3608
-    newbits′ = newbits isa UInt64 ? (newbits,) : newbits
-    return Kmer{A,K,N}(_cliphead(64N - 2K, newbits′...))
+@inline function pushfirst(x::Kmer{A,K,N}, nt::DNA) where {A,K,N}
+    ntbits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01]) << (62 - (64N - 2K))
+    return Kmer{A,K,N}(_rightshift_carry(2, ntbits, x.data...))
 end
 
-@inline function shiftleft(x::NTuple{N,UInt64}) where {N}
-    _, newbits = _shiftleft(x...)
-    # TODO: The line below is a workaround for julia issues #29114 and #3608
-    return newbits isa UInt64 ? (newbits,) : newbits
+@inline function pushlast(x::Kmer{A,K,N}, nt::DNA) where {A,K,N}
+    ntbits = UInt64(twobitnucs[reinterpret(UInt8, nt) + 0x01])
+    _, newbits = _leftshift_carry(x.data, 2, ntbits)
+    return Kmer{A,K,N}(newbits)
 end
 
-@inline function _shiftleft(head::UInt64, tail...)
-    carry, newtail = _shiftleft(tail...)
-    # TODO: The line below is a workaround for julia issues #29114 and #36087
-    newtail′ = newtail isa UInt64 ? (newtail,) : newtail 
-    return head >> 62, ((head << 2) | carry, newtail′...)
-end
-
-@inline _shiftleft(head::UInt64) = (head & 0xC000000000000000) >> 62, head << 2
-=#
 
 ###
 ### Transformation methods
 ###
 
-@inline Base.:(>>)(seq::Kmer{A,K,N}, nbases::Integer) where {A,K,N} = rightshift_carry(seq.data, 2nbases)
-@inline Base.:(<<)(seq::Kmer{A,K,N}, nbases::Integer) where {A,K,N} = leftshift_carry(seq.data, 2nbases)
+@inline Base.:(>>)(seq::Kmer{A,K,N}, nbases::Integer) where {A,K,N} = Kmer{A,K,N}(rightshift_carry(seq.data, 2nbases))
+@inline Base.:(<<)(seq::Kmer{A,K,N}, nbases::Integer) where {A,K,N} = Kmer{A,K,N}(leftshift_carry(seq.data, 2nbases))
 
-@inline function Base.:(<<)(seq::Kmer{A,K,N}, nuc::DNA) where {A,K,N}
-    return Kmer{A,K,N}(_cliphead(64N - 2K, setlast(leftshift_carry(packed_data(seq)), nuc)...))
-end
+@inline Base.:(<<)(seq::Kmer{A,K,N}, nuc::DNA) where {A,K,N} = pushlast(seq, nuc)
+@inline Base.:(>>)(seq::Kmer{A,K,N}, nuc::DNA) where {A,K,N} = pushfirst(seq, nuc)
 
 """
     complement(seq::T) where {T<:Kmer}
